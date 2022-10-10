@@ -17,7 +17,6 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-    // valid email
     profileImage: {
         type: String,
         required: true,
@@ -30,7 +29,6 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-    // valid Indian mobile number
     password: {
         type: String,
         required: true,

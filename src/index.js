@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 mongoose.connect("mongodb+srv://kakarot:7r9d5ckARYXY2cDi@cluster0.ecdqowc.mongodb.net/group03Database?retryWrites=true&w=majority", {
     useNewUrlParser: true
 })
-    .then(() => console.log("MongoDB is Conneced"))
+    .then(() => console.log("MongoDB is Connected"))
     .catch(error => console.log(error))
 
 app.use('/', router)
