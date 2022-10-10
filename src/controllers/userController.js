@@ -2,44 +2,7 @@ const UserModel = require('../models/userModel')
 const bcrypt = require('bcrypt')
 const aws = require('aws-sdk')
 
-
-const isValidString = function (value) {
-    if (typeof (value) !== "string" || value.trim().length == 0) {
-        return false
-    }
-    return true
-}
-
-const isValidName = function (value) {
-    const nameRegex = /^\S+\w{8,32}\S{1,}/
-    return nameRegex.test(value)
-}
-
-const isValidEmail = (email) => {
-    const emailRegex = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
-    return emailRegex.test(email)
-}
-
-const isValidImageLink = function (value) {
-    const url = /(http|https):\/\/.+\.(jpg|jpeg|png)$/
-    return url.test(value)
-}
-
-const isValidPhone = function (value) {
-    const phoneRegex = /^[6789]\d{9}$/
-    return phoneRegex.test(value)
-}
-
-const isValidPassword = function (value) {
-    const passwordRegex = /^[a-zA-Z0-9!@#$%^&*]{8,15}$/
-    return passwordRegex.test(value)
-}
-
-const isValidPinCode = function (value) {
-    const pincodeRegex = /^[1-9][0-9]{5}$/
-    return pincodeRegex.test(value)
-}
-
+const { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode } = require('../validations/validators')
 
 const createUser = async function (req, res) {
     try {
@@ -153,7 +116,8 @@ const createUser = async function (req, res) {
             return res.status(400).send({status: false, message: "Password must be atlease 8 characters and maximum 15 characters"})
         }
         let encrypt = bcrypt.hash(password, 10, function (err, hash) {
-            password = encrypt
+            console.log(hash)
+            password = hash
         })
 
         if (!address) {
