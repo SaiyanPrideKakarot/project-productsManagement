@@ -182,34 +182,51 @@ const createUser = async function (req, res) {
 // api fot login
 const loginUser = async function (req, res) {
     try {
-
-        if (!isValidRequest(req.body))
-            return res.status(400).send({ status: false, message: "Request body not  empty" });
-
-        const { email, password } = req.body;
-
-        if (!isValid(email) || !isValid(password))
-            return res.status(400).send({ status: false, message: "Credential must be present" });
+        let data = req.body
+        if (Object.keys(data).length === 0) {
+            return res.status(400).send({ status: false, message: "Request body not empty" });
+        }
+        if (Object.keys(data).length > 2) {
+            return res.status(400).send({ status: false, message: "Request body must have email and password only" });
+        }
+        let { email, password } = req.body;
+        if (!email) {
+            return res.status(400).send({ status: false, message: "Email is mandatory" })
+        }
+        if (!isValidString(email)) {
+            return res.status(400).send({ status: false, message: "Email is must be string and cannot be empty" })
+        }
+        if (!isValidEmail(email)) {
+            return res.status(400).send({ status: false, message: "Please enter valid email address" })
+        }
+        if (!password) {
+            return res.status(400).send({ status: false, message: "Email is mandatory" })
+        }
+        if (!isValidString(password)) {
+            return res.status(400).send({ status: false, message: "Email is must be string and cannot be empty" })
+        }
+        if (!isValidPassword(password)) {
+            return res.status(400).send({ status: false, message: "Please enter valid email address" })
+        }
+        // if (!isValid(email) || !isValid(password))
+        //     return res.status(400).send({ status: false, message: "Credential must be present" });
 
 
         let user = await UserModel.findOne({ email: email });
-        if (!user)
+        if (!user) {
             return res.status(400).send({ status: false, message: "Credential is not correct", });
+        }
         // comparing password between db and req.body
         let isValidPassword = await bcrypt.compare(password.trim(), user.password)
-        if (!isValidPassword)
+        if (!isValidPassword) {
             return res.status(400).send({ status: false, message: "Password is not correct" });
-        let token = jwt.sign(
-            {
-                userId: user._id.toString(),
-                batch: "plutonium",
-                organisation: "FunctionUp",
-            },
-            "Project5-groupo3",
-            {
-                expiresIn: '24h'
-            }
-        );
+        }
+        let payload = {
+            userId: user._id.toString(),
+            batch: "plutonium",
+            organisation: "FunctionUp",
+        }
+        let token = jwt.sign(payload, "Project5-group03", { expiresIn: '24h' });
         const finalData = {};
         finalData.userId = user._id;
         finalData.token = token
