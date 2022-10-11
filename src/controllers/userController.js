@@ -202,5 +202,44 @@ const createUser = async function (req, res) {
         return res.status(500).send({ status: false, message: error.message })
     }
 }
+// api fot login
+const loginUser = async function (req, res) {
+    try {
+        
+        if (!isValidRequest(req.body))
+            return res.status(400).send({ status: false, message: "Request body not  empty" });
 
-module.exports = {createUser}
+        const { email, password } = req.body;
+        
+        if (!isValid(email) || !isValid(password))
+            return res.status(400).send({ status: false, message: "Credential must be present" });
+
+        
+        let user = await UserModel.findOne({ email: email });
+        if (!user)
+            return res.status(400).send({ status: false, message: "Credential is not correct", });
+ // comparing password between db and req.body
+        let isValidPassword = await bcrypt.compare(password.trim(), user.password)
+        if (!isValidPassword)
+            return res.status(400).send({ status: false, message: "Password is not correct" });
+             let token = jwt.sign(
+            {
+                userId: user._id.toString(),
+                batch: "plutonium",
+                organisation: "FunctionUp",
+            },
+            "Project5-groupo3",
+            {
+                expiresIn: '24h'
+            }
+        );
+        const finalData = {};
+        finalData.userId = user._id;
+        finalData.token = token
+        res.status(200).send({ status: true, message: "User login successfully", data: finalData });
+
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message });
+    }
+}
+module.exports = {createUser ,loginUser}
