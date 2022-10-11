@@ -6,7 +6,7 @@ const isValidString = function (value) {
 }
 
 const isValidName = function (value) {
-    const nameRegex = /^\S+\w{8,32}\S{1,}/
+    const nameRegex = /^[A-Za-z]+$/
     return nameRegex.test(value)
 }
 

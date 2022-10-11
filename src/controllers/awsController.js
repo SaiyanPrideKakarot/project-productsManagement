@@ -11,14 +11,14 @@ let uploadFile = async (file) => {
         let uploadParams = {
             ACL: "public-read",
             Bucket: "classroom-training-bucket",
-            Key: "project5Group03/profileImages" + file.originalname,
+            Key: "project5Group03/profileImages/" + file.originalname,
             Body: file.buffer
         }
         s3.upload(uploadParams, function (error, data) {
             if (error) {
                 return reject({"error": error})
             }
-            console.log(data)
+            // console.log(data)
             console.log("File Uploaded Successfully")
             return resolve(data.Location)
         })
