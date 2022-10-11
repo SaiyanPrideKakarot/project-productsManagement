@@ -30,4 +30,9 @@ const isValidPinCode = function (value) {
     return pincodeRegex.test(value)
 }
 
-module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode }
+const isValidImage = function (value) {
+    const imageRegex = /.+\.(?:(jpg|gif|png|jpeg|jfif))/
+    return imageRegex.test(value)
+}
+
+module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage }

@@ -1,21 +1,22 @@
 const UserModel = require('../models/userModel')
 const bcrypt = require('bcrypt')
-const aws = require('aws-sdk')
 
-const { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode } = require('../validations/validators')
+const { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage } = require('../validations/validators')
+const {uploadFile} = require('../controllers/awsController')
 
 const createUser = async function (req, res) {
     try {
         let data = req.body
-        let { fname, lname, email, profileImage, phone, password, address } = data
+        let { fname, lname, email, phone, password, address } = data
+        let profileImage = req.files
 
-        if (Object.keys(data).length == 0) {
-            return res.status(400).send({ status: false, message: "Request Body cannot be empty" })
+        if ((Object.keys(data).length == 0) && !profileImage) {
+            return res.status(400).send({ status: false, message: "Please provide appropriate details" })
         }
 
-        if (Object.keys(data).length > 7) {
-            return res.status(400).send({ status: false, message: "Request Body can have only fname, lname, email, profileImage, phone, password, address" })
-        }
+        // if (Object.keys(data).length > 7) {
+        //     return res.status(400).send({ status: false, message: "Request Body can have only fname, lname, email, profileImage, phone, password, address" })
+        // }
 
         if (!fname) {
             return res.status(400).send({ status: false, message: "First Name is required" })
@@ -54,42 +55,18 @@ const createUser = async function (req, res) {
             return res.status(400).send({status: false, message: `User with email address: ${email} already exists`})
         }
 
-        if (!profileImage) {
-            return res.status(400).send({ status: false, message: "Please Upload Profile Image" })
+        if (profileImage.length === 0) {
+            return res.status(400).send({status: false, message: "Please upload profile image"})
         }
-        aws.config.update({
-            accessKeyId: "AKIAY3L35MCRZNIRGT6N",
-            secretAccessKey: "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",
-            region: "ap-south-1"
-        })
-        let uploadImage = async (file) => {
-            return new Promise(function (resolve, reject) {
-                let s3 = new aws.S3({apiVersion: "2006-03-01"})
-                let uploadParams = {
-                    ACL: "public-read",
-                    Bucket: "classroom-training-bucket",
-                    Key: "project5Group03/profileImages" + file.originalname,
-                    Body: file.buffer
-                }
-                s3.upload(uploadParams, function (error, data) {
-                    if (error) {
-                        return reject({"error": error})
-                    }
-                    console.log(data)
-                    console.log("File Uploaded Successfully")
-                    return resolve(data.Location)
-                })
-            })
-        }
-        let files = req.files
-        if (!files) {
-            return res.status(400).send({status: false, message: "No image found"})
-        }
-        if (files.length > 1) {
+        if (profileImage.length > 1) {
             return res.status(400).send({status: false, message: "You can upload only one image in Profile Image"})
         }
-        let uploadFileUrl = await uploadImage(files[0])
-        profileImage = `${uploadFileUrl}`
+        if (!isValidImage(profileImage[0].originalname)) {
+            return res.status(400).send({status: false, message: "Invalid image type. Only jpg, png, jpeg, gif, jfif image type are accepted."})
+        }
+       
+        let uploadedImageUrl = await uploadFile(profileImage[0])
+        data.profileImage = uploadedImageUrl
 
         if (!phone) {
             return res.status(400).send({status: false, message: "Phone Number is mandatory"})
@@ -117,8 +94,8 @@ const createUser = async function (req, res) {
         }
         let encrypt = bcrypt.hash(password, 10, function (err, hash) {
             console.log(hash)
-            password = hash
         })
+        password = encrypt
 
         if (!address) {
             return res.status(400).send({status: false, message: "Address is a mandatory field"})
@@ -242,4 +219,5 @@ const loginUser = async function (req, res) {
         return res.status(500).send({ status: false, message: error.message });
     }
 }
-module.exports = {createUser ,loginUser}
+
+module.exports = {createUser, loginUser}
