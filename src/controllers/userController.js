@@ -20,9 +20,9 @@ const createUser = async function (req, res) {
         if (!fname) {
             return res.status(400).send({ status: false, message: "First Name is required" })
         }
-        if (!isValidString(fname)) {
-            return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
-        }
+        // if (!isValidString(fname)) {
+        //     return res.status(400).send({ status: false, message: "First Name can only be string" })
+        // }
         fname = fname.trim()
         if (!isValidName(fname)) {
             return res.status(400).send({ status: false, message: "Please enter a valid First Name" })
@@ -62,7 +62,7 @@ const createUser = async function (req, res) {
         }
         phone = phone.trim()
         if (!isValidPhone(phone)) {
-            return res.status(400).send({ status: false, message: "Please provide a valid phone number" })
+            return res.status(400).send({ status: false, message: "Please provide a valid Indian phone number" })
         }
         let notUniquePhone = await UserModel.findOne({ phone: phone })
         if (notUniquePhone) {
@@ -195,7 +195,7 @@ const loginUser = async function (req, res) {
             return res.status(400).send({ status: false, message: "Email is mandatory" })
         }
         if (!isValidString(email)) {
-            return res.status(400).send({ status: false, message: "Email is must be string and cannot be empty" })
+            return res.status(400).send({ status: false, message: "Email is must be string" })
         }
         if (!isValidEmail(email)) {
             return res.status(400).send({ status: false, message: "Please enter valid email address" })
@@ -204,14 +204,14 @@ const loginUser = async function (req, res) {
             return res.status(400).send({ status: false, message: "Password is mandatory" })
         }
         if (!isValidString(password)) {
-            return res.status(400).send({ status: false, message: "Password is must be string and cannot be empty" })
+            return res.status(400).send({ status: false, message: "Password is must be string" })
         }
 
-        let user = await UserModel.findOne({ email: email.trim()});
+        let user = await UserModel.findOne({ email: email.trim() });
         if (!user) {
             return res.status(400).send({ status: false, message: "Email is not correct", });
         }
-        
+
         let comparedPassword = bcrypt.compareSync(password.trim(), user.password)
         if (!comparedPassword) {
             return res.status(400).send({ status: false, message: "Password is not correct" });
@@ -226,7 +226,7 @@ const loginUser = async function (req, res) {
         finalData.userId = user._id.toString()
         finalData.token = token
         res.setHeader("Authorization", token)
-        res.status(200).send({ status: true, message: "User login successfully", data: finalData });
+        return res.status(201).send({ status: true, message: "User login successfully", data: finalData });
 
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message });
@@ -237,9 +237,6 @@ const loginUser = async function (req, res) {
 const getUserProfile = async (req, res) => {
     try {
         let userId = req.params.userId;
-        if (!userId) {
-            return res.status(400).send({ status: false, message: "provide UsreId" });
-        }
 
         if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "Invalid UserId" })
@@ -247,10 +244,10 @@ const getUserProfile = async (req, res) => {
 
         let decodedToken = req.decodedToken
         if (userId != decodedToken.userId) {
-            return res.status(403).send({status: false, message: "User is not allowed to view others profile"})
+            return res.status(403).send({ status: false, message: "User is not allowed to view others profile" })
         }
-        
-        const userProfile = await UserModel.findById({ _id: userId });
+
+        let userProfile = await UserModel.findById(userId);
         if (userProfile) {
             return res.status(200).send({ status: false, message: "Success", data: userProfile });
         } else {
@@ -264,35 +261,31 @@ const getUserProfile = async (req, res) => {
 
 
 const updateAPI = async function (req, res) {
-    // console.log(req.params.userId)
     try {
-        let obj = {};
-        let userId = req.params.userId
-        
-        // by author Id
-        let fname = req.body.fname;
-        let lname = req.body.lname;
-        let email = req.body.email;
-        let profileImage = req.body.profileImage;
-        let phone = req.body.phone;
-        let password = req.body.password;
-        let address = req.body.address;
 
-        let shipping  = req.body.address.shipping
-        let billing = req.body.address.billing
+        let userId = req.params.userId
+        let data = req.body
+        let { fname, lname, email, phone, password, address } = data
+        let profileImage = req.files
+        let { shipping, billing } = data.address
+
+        let obj = {};
         // applying filters
         //Returns all blogs in the collection that aren't deleted and are published
         if (fname) {
-            fname = fname.trim()
             if (!isValidString(fname)) {
                 return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
             }
+            fname = fname.trim()
             if (!isValidName(fname)) {
                 return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
             }
             obj.fname = fname;
         }
         if (lname) {
+            if (!isValidString(lname)) {
+                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
+            }
             lname = lname.trim()
             if (!isValidName(lname)) {
                 return res.status({ status: false, message: "lname Name can only be string and cannot be empty" })
@@ -300,6 +293,9 @@ const updateAPI = async function (req, res) {
             obj.lname = lname;
         }
         if (email) {
+            if (!isValidString(email)) {
+                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
+            }
             email = email.trim().toLowerCase()
             if (!isValidEmail(email)) {
                 return res.status(400).send({ status: false, message: "Please enter a valid email" })
@@ -337,7 +333,13 @@ const updateAPI = async function (req, res) {
             obj.password = password;
         }
         if (profileImage) {
-            let uploadedImageUrl = await uploadFile(files[0])
+            // if (files.length > 1) {
+            //     return res.status(400).send({ status: false, message: "You can upload only one image in Profile Image" })
+            // }
+            // if (!isValidImage(files[0].originalname)) {
+            //     return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg, gif, jfif image type are accepted." })
+            // }
+            let uploadedImageUrl = await uploadFile(profileImage[0])
             obj.profileImage = uploadedImageUrl;
         }
         if (address) {
@@ -369,6 +371,7 @@ const updateAPI = async function (req, res) {
                 if (!isValidPinCode(address.shipping.pincode)) {
                     return res.status(400).send({ status: false, message: "Please enter a valid pincode for shipping address. A valid pincode is of 6 digits and doesnot starts with 0" })
                 }
+                address.shipping.pincode = address.shipping.pincode
             } else {
                 return res.status(400).send({ status: false, message: "Shipping address is a mandatory field" })
             }
@@ -400,22 +403,19 @@ const updateAPI = async function (req, res) {
                 if (!isValidPinCode(address.billing.pincode)) {
                     return res.status(400).send({ status: false, message: "Please enter a valid pincode for billing address. A valid pincode is of 6 digits and doesnot starts with 0" })
                 }
-                obj.address=address
+                address.billing.pincode = address.billing.pincode
             } else {
                 return res.status(400).send({ status: false, message: "Billing address is a mandatory field" })
             }
-        } else {
-            return res.status(400).send({ status: false, message: "Address is a mandatory field" })
+            obj.address = address
         }
-
-
         let savedData = await UserModel.findOneAndUpdate({ _id: userId }, obj, { new: true });
         if (!savedData) {
-            return res.status(404).send({ status: false, msg: "blogs not found" });
+            return res.status(404).send({ status: false, msg: "User not found" });
         }
-
         return res.status(200).send({ status: true, data: savedData });
     } catch (err) {
+        console.log(err)
         return res.status(500).send({ status: false, msg: "Error", error: err.message });
     }
 }
