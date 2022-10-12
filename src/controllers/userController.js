@@ -205,9 +205,6 @@ const loginUser = async function (req, res) {
         if (!isValidString(password)) {
             return res.status(400).send({ status: false, message: "Email is must be string and cannot be empty" })
         }
-        if (!isValidPassword(password)) {
-            return res.status(400).send({ status: false, message: "Please enter valid email address" })
-        }
         // if (!isValid(email) || !isValid(password))
         //     return res.status(400).send({ status: false, message: "Credential must be present" });
 
@@ -217,8 +214,14 @@ const loginUser = async function (req, res) {
             return res.status(400).send({ status: false, message: "Credential is not correct", });
         }
         // comparing password between db and req.body
-        let isValidPassword = await bcrypt.compare(password.trim(), user.password)
-        if (!isValidPassword) {
+        let comparedPassword = bcrypt.compare(password.trim(), user.password, function (err, result) {
+            if (result) {
+                console.log(result)
+                password = result
+            }
+        })
+        // console.log(comparedPassword)
+        if (!comparedPassword) {
             return res.status(400).send({ status: false, message: "Password is not correct" });
         }
         let payload = {
