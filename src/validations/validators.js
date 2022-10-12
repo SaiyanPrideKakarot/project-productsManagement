@@ -1,3 +1,5 @@
+const mongoose = require("mongoose")
+
 const isValidString = function (value) {
     if (typeof value === "undefined" || value === null || typeof value !== "string" || value.trim().length == 0) {
         return false
@@ -35,4 +37,12 @@ const isValidImage = function (value) {
     return imageRegex.test(value)
 }
 
-module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage }
+const isValidObjectId = function (value) {
+    if (mongoose.Types.ObjectId.isValid(value)) {
+        return true
+    } else {
+        return false
+    }
+}
+
+module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId }
