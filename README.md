@@ -184,12 +184,14 @@ Product Model
   updatedAt: {timestamp},
 }
 Products API (No authentication required)
+
 POST /products
 Create a product document from request body.
 Upload product image to S3 bucket and save image public url in document.
 Response format
 On success - Return HTTP status 201. Also return the product document. The response should be a JSON object like this
 On error - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like this
+
 GET /products
 Returns all products in the collection that aren't deleted.
 Filters
