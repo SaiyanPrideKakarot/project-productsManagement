@@ -241,6 +241,7 @@ const updateAPI = async function (req, res) {
     try {
         let obj = {};
         let userId = req.params.userId
+        
         // by author Id
         let fname = req.body.fname;
         let lname = req.body.lname;
@@ -249,6 +250,9 @@ const updateAPI = async function (req, res) {
         let phone = req.body.phone;
         let password = req.body.password;
         let address = req.body.address;
+
+        let shipping  = req.body.address.shipping
+        let billing = req.body.address.billing
         // applying filters
         //Returns all blogs in the collection that aren't deleted and are published
         if (fname) {
@@ -312,7 +316,9 @@ const updateAPI = async function (req, res) {
         if (address) {
             address = JSON.parse(address)
             if (address.shipping) {
-                
+                if (!address.shipping.street) {
+                    return res.status(400).send({ status: false, message: "Street of shipping address is mandatory" })
+                }
                 if (!isValidString(address.shipping.street)) {
                     return res.status(400).send({ status: false, message: "Street of shipping address must be in string and cannot be empty" })
                 }
@@ -336,9 +342,9 @@ const updateAPI = async function (req, res) {
                 if (!isValidPinCode(address.shipping.pincode)) {
                     return res.status(400).send({ status: false, message: "Please enter a valid pincode for shipping address. A valid pincode is of 6 digits and doesnot starts with 0" })
                 }
-                obj.address.shipping = address.shipping;
+            } else {
+                return res.status(400).send({ status: false, message: "Shipping address is a mandatory field" })
             }
-        }
 
             if (address.billing) {
                 if (!address.billing.street) {
@@ -367,16 +373,20 @@ const updateAPI = async function (req, res) {
                 if (!isValidPinCode(address.billing.pincode)) {
                     return res.status(400).send({ status: false, message: "Please enter a valid pincode for billing address. A valid pincode is of 6 digits and doesnot starts with 0" })
                 }
-                obj.address.billing = address.billing;
+                obj.address=address
+            } else {
+                return res.status(400).send({ status: false, message: "Billing address is a mandatory field" })
             }
-            
-        
+        } else {
+            return res.status(400).send({ status: false, message: "Address is a mandatory field" })
+        }
+
 
         let savedData = await UserModel.findOneAndUpdate({ _id: userId }, obj, { new: true });
         if (!savedData) {
             return res.status(404).send({ status: false, msg: "blogs not found" });
         }
-    
+
         return res.status(200).send({ status: true, data: savedData });
     } catch (err) {
         return res.status(500).send({ status: false, msg: "Error", error: err.message });
