@@ -7,6 +7,6 @@ const {authentication, authorization} = require('../middlewares/auth')
 router.post('/register', UserController.createUser)
 router.post('/login', UserController.loginUser)
 router.get('/user/:userId/profile', authentication, UserController.getUserProfile)
-router.put('/user/:userId/profile', UserController.updateAPI)
+router.put('/user/:userId/profile', authentication, authorization, UserController.updateAPI)
 
 module.exports = router
