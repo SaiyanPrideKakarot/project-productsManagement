@@ -216,7 +216,7 @@ Check if the productId exists (must have isDeleted false and is present in colle
 Response format
 On success - Return HTTP status 200. Also return the updated product document. The response should be a JSON object like this
 On error - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like this
-DELETE /products/:productId
+?DELETE /products/:productId
 Deletes a product by product id if it's not already deleted
 Response format
 On success - Return HTTP status 200. The response should be a JSON object like this
