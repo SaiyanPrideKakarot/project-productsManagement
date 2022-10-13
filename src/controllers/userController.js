@@ -155,8 +155,8 @@ const createUser = async function (req, res) {
         if (files.length > 1) {
             return res.status(400).send({ status: false, message: "You can upload only one image in Profile Image" })
         }
-        if (!isValidImage(files[0].originalname)) {
-            return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg, gif, jfif image type are accepted." })
+        if (!isValidImage(files[0].mimetype)) {
+            return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg image type are accepted." })
         }
 
         let uploadedImageUrl = await uploadFile(files[0])

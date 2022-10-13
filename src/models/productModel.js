@@ -30,19 +30,13 @@ const producrSchema = new mongoose.Schema({
         type: String, 
         required:true 
     },  
-    style: {
-        type: String
-    },
+    style: String,
     availableSizes: {
         type: [String],
         enum:["S", "XS","M","X", "L","XXL", "XL"] 
     },
-    installments: {
-        type: Number
-    },
-    deletedAt: {
-        type: Date 
-    }, 
+    installments: Number,
+    deletedAt: Date, 
     isDeleted: {
         type: Boolean,
         default: false

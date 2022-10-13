@@ -33,7 +33,7 @@ const isValidPinCode = function (value) {
 }
 
 const isValidImage = function (value) {
-    const imageRegex = /.+\.(?:(jpg|gif|png|jpeg|jfif))/
+    const imageRegex = /image\/png|image\/jpeg|image\/jpg/
     return imageRegex.test(value)
 }
 
@@ -45,4 +45,35 @@ const isValidObjectId = function (value) {
     }
 }
 
-module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId }
+const isValidNumber = function (value) {
+    if (typeof value == "number") {
+        return true
+    } else {
+        return false
+    }
+}
+
+const isValidBoolean = function (value) {
+    if (typeof value == "boolean") {
+        return true
+    } else {
+        return false
+    }
+}
+
+const isValidSizes = function (value) {
+    value = value.split(",").map((s) => s.trim().toUpperCase())
+    if (value.every((e) => ["S", "XS","M","X", "L","XXL", "XL"].includes(e))) {
+        return true
+    } else {
+        return false
+    }
+}
+
+const isNumberWithoutDecimal = function (value) {
+    let regex = /^\d+$/
+    return regex.test(value)
+}
+
+
+module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal }
