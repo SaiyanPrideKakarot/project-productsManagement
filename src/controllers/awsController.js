@@ -7,7 +7,7 @@ aws.config.update({
 })
 let uploadFile = async (file) => {
     return new Promise(function (resolve, reject) {
-        let s3 = new aws.S3({apiVersion: "2006-03-01"})
+        let s3 = new aws.S3({ apiVersion: "2006-03-01" })
         let uploadParams = {
             ACL: "public-read",
             Bucket: "classroom-training-bucket",
@@ -16,7 +16,7 @@ let uploadFile = async (file) => {
         }
         s3.upload(uploadParams, function (error, data) {
             if (error) {
-                return reject({"error": error})
+                return reject({ "error": error })
             }
             // console.log(data)
             console.log("File Uploaded Successfully")
@@ -25,4 +25,4 @@ let uploadFile = async (file) => {
     })
 }
 
-module.exports = {uploadFile}
+module.exports = { uploadFile }

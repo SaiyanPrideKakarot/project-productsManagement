@@ -1,14 +1,11 @@
-module.exports = {  getProductQuery }
 const ProductModel = require('../models/productModel')
-const {isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal } = require('../validations/validators')
+const { isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal } = require('../validations/validators')
 const { uploadFile } = require('../controllers/awsController')
 const productModel = require("../models/productModel")
 
 
-// query filter
 
-
-const getProductQuery = async function (req, res) {
+const getProductByQuery = async function (req, res) {
     try {
         let query = req.query;
 
@@ -26,48 +23,63 @@ const getProductQuery = async function (req, res) {
                     }
                 }
                 filter["availableSizes"] = { $in: uniqueSizes };
-            } else return res.status(400).send({ status: false, message: "size  would be array type" })
+            } else {
+                return res.status(400).send({ status: false, message: "size  would be array type" })
+            }
         }
 
 
         if (name) {
-            if (!isValid(name)) return res.status(400).send({ status: false, message: "name  is currect format" })
+            if (!isValid(name)) {
+                return res.status(400).send({ status: false, message: "name  is currect format" })
+            }
             filter["title"] = { "$regex": name };
         }
 
         if (priceGreaterThan) {
-            if (!Number(priceGreaterThan)) return res.status(400).send({ status: false, message: "priceGreaterThan should be in valid number/decimal format" })
+            if (!Number(priceGreaterThan)) {
+                return res.status(400).send({ status: false, message: "priceGreaterThan should be in valid number/decimal format" })
+            }
             filter["price"] = { $gte: priceGreaterThan }
         }
 
         if (priceLessThan) {
-            if (!Number(priceLessThan)) return res.status(400).send({ status: false, message: "priceLessThan should be in valid number/decimal format" })
+            if (!Number(priceLessThan)) {
+                return res.status(400).send({ status: false, message: "priceLessThan should be in valid number/decimal format" })
+            }
             filter["price"] = { $lte: priceLessThan }
         }
 
         if (priceGreaterThan && priceLessThan) {
-            if (!Number(priceGreaterThan)) return res.status(400).send({ status: false, message: "priceGreaterThan should be in valid number/decimal format" })
-            if (!Number(priceLessThan)) return res.status(400).send({ status: false, message: "priceLessThan should be in valid number/decimal format" })
+            if (!Number(priceGreaterThan)) {
+                return res.status(400).send({ status: false, message: "priceGreaterThan should be in valid number/decimal format" })
+            }
+            if (!Number(priceLessThan)) {
+                return res.status(400).send({ status: false, message: "priceLessThan should be in valid number/decimal format" })
+            }
             filter["price"] = { $gte: priceGreaterThan, $lte: priceLessThan }
         }
 
         const foundProducts = await productModel.find(filter).select({ __v: 0 })
 
-        if (!priceSort) priceSort = 1
+        if (!priceSort) {
+            priceSort = 1
+        }
         if (priceSort == 1) {
             foundProducts.sort((a, b) => {
                 return a.price - b.price
             })
-        }
-        else if (priceSort == -1) {
+        } else if (priceSort == -1) {
             foundProducts.sort((a, b) => {
                 return b.price - a.price
             })
+        } else {
+            return res.status(400).send({ status: false, message: "priceSort should be 1 or -1" })
         }
 
-        else return res.status(400).send({ status: false, message: "priceSort should be 1 or -1" })
-
-        if (foundProducts.length == 0) return res.status(404).send({ status: false, message: " product  not found for the given query" })
+        if (foundProducts.length == 0) {
+            return res.status(404).send({ status: false, message: " product  not found for the given query" })
+        }
 
         return res.status(200).send({ status: "true", message: 'Success', data: foundProducts })
 
@@ -76,15 +88,37 @@ const getProductQuery = async function (req, res) {
     }
 }
 
+
+const getProductById = async function (req, res) {
+    try {
+
+        let productId = req.params.productId;
+
+        if (!isValidObjectId(productId)) {
+            return res.status(400).send({ status: false, message: "Please provide valid productId" });
+        }
+
+        let productDetails = await productModel.findOne({ _id: productId, isDeleted: false });
+        if (!productDetails) {
+            return res.status(404).send({ status: false, message: "No such product exists" });
+        }
+        return res.status(200).send({ status: true, message: "Success", data: productDetails });
+
+    } catch (err) {
+        return res.status(500).send({ status: false, message: err.message });
+    }
+};
+
+
 const updateProduct = async function (req, res) {
     try {
         let productId = req.params.productId
         if (!isValidObjectId(productId)) {
-            return res.status(400).send({status: false, message: "Invalid Product Id in path params"})
+            return res.status(400).send({ status: false, message: "Invalid Product Id in path params" })
         }
 
         let data = req.body
-        let {title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments} = data
+        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
         let productImage = req.files
         let editor = {}
 
@@ -98,22 +132,22 @@ const updateProduct = async function (req, res) {
 
         if (price) {
             if (!isValidNumber(price)) {
-                return res.status(400).send({status: false, message: "Price should only be Numbers"})
+                return res.status(400).send({ status: false, message: "Price should only be Numbers" })
             }
             editor.price = price
         }
 
         if (currencyId) {
-            return res.status(400).send({status: false, message: "Currency Id can only be INR and it cannot be changed"})
+            return res.status(400).send({ status: false, message: "Currency Id can only be INR and it cannot be changed" })
         }
 
         if (currencyFormat) {
-            return res.status(400).send({status: false, message: "Currency Format can only be ₹ and it cannot be changed"})
+            return res.status(400).send({ status: false, message: "Currency Format can only be ₹ and it cannot be changed" })
         }
 
         if (isFreeShipping) {
             if (!isValidBoolean(isFreeShipping)) {
-                return res.status(400).send({status: false, message: "isFreeShipping should only of boolean type"})
+                return res.status(400).send({ status: false, message: "isFreeShipping should only of boolean type" })
             }
             editor.isFreeShipping = isFreeShipping
         }
@@ -124,7 +158,7 @@ const updateProduct = async function (req, res) {
 
         if (availableSizes) {
             if (!isValidSizes) {
-                return res.status(400).send({status: false, message: "Please provide a valid size"})
+                return res.status(400).send({ status: false, message: "Please provide a valid size" })
             }
             // let check = await ProductModel.findById(productId)
             // if ((check.availableSizes).includes(availableSizes)) {
@@ -135,20 +169,20 @@ const updateProduct = async function (req, res) {
 
         if (installments) {
             if (!isValidNumber(installments)) {
-                return res.status(400).send({status: false, message: "Installments should only be Numbers"})
+                return res.status(400).send({ status: false, message: "Installments should only be Numbers" })
             }
             if (!isNumberWithoutDecimal(installments)) {
-                return res.status(400).send({status: false, message: "Installments cannot be in decimals"})
+                return res.status(400).send({ status: false, message: "Installments cannot be in decimals" })
             }
             editor.installments = installments
         }
 
         if (productImage) {
             if (productImage.length == 0) {
-                return res.status(400).send({status: false, message: "If you want to update product image then you have to upload image"})
+                return res.status(400).send({ status: false, message: "If you want to update product image then you have to upload image" })
             }
             if (productImage.length > 1) {
-                return res.status(400).send({status: false, message: "Please upload only one image"})
+                return res.status(400).send({ status: false, message: "Please upload only one image" })
             }
             if (!isValidImage(productImage[0].mimetype)) {
                 return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg image type are accepted." })
@@ -157,13 +191,13 @@ const updateProduct = async function (req, res) {
             editor.productImage = uploadImage
         }
 
-        let updateData = await ProductModel.findOneAndUpdate({_id: productId, isDeleted: false},
-            {$set: editor},
-            {new: true})
+        let updateData = await ProductModel.findOneAndUpdate({ _id: productId, isDeleted: false },
+            { $set: editor },
+            { new: true })
         if (!updateData) {
-            return res.status(404).send({status: false, message: "Product not found"})
+            return res.status(404).send({ status: false, message: "Product not found" })
         }
-        return res.status(200).send({status: true, message: "Success", data: updateData})
+        return res.status(200).send({ status: true, message: "Success", data: updateData })
     } catch (error) {
         console.log(error)
         return res.status(500).send({ status: false, error: error.message })
@@ -171,5 +205,32 @@ const updateProduct = async function (req, res) {
 }
 
 
-module.exports = { updateProduct ,getProductQuery}
+const deleteProduct = async function (req, res) {
+    try {
 
+        let productId = req.params.productId;
+
+        if (!isValidObjectId(productId)) {
+            return res.status(400).send({ status: false, message: "Inavlid productId." });
+        }
+        let findProduct = await productModel.findOne({ _id: productId, isDeleted: false });
+        if (!findProduct) {
+            return res.status(404).send({ status: false, message: `No product found by ${productId}` });
+        }
+        if (findProduct.isDeleted == true) {
+            return res.status(400).send({ status: false, message: `Product has been already deleted.` });
+        }
+
+        let deletedProduct = await productModel.findOneAndUpdate({ _id: productId },
+            { $set: { isDeleted: true, deletedAt: new Date() } },
+            { new: true }).select({ title: 1, isDeleted: 1, deletedAt: 1 });
+
+        return res.status(200).send({ status: true, message: "Product deleted successfully.", data: deletedProduct });
+
+    } catch (err) {
+        res.status(500).send({ status: false, message: err.message });
+    }
+};
+
+
+module.exports = { updateProduct, getProductByQuery, getProductById, deleteProduct }
