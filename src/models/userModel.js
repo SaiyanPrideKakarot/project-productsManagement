@@ -22,7 +22,6 @@ const UserSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    // s3 link
     phone: {
         type: String,
         required: true,
@@ -35,7 +34,6 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         minLen: 8,
         maxLen: 15},
-    // encrypted password
     address: {
       shipping: {
         street: {

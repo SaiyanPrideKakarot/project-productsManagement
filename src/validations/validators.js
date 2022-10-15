@@ -62,13 +62,21 @@ const isValidBoolean = function (value) {
 }
 
 const isValidSizes = function (value) {
-    value = value.split(",").map((s) => s.trim().toUpperCase())
     if (value.every((e) => ["S", "XS", "M", "X", "L", "XXL", "XL"].includes(e))) {
         return true
     } else {
         return false
     }
 }
+
+// const isValidSizes = function (value) {
+//     value = value.split(",").map((s) => s.trim().toUpperCase())
+//     if (value.every((e) => ["S", "XS", "M", "X", "L", "XXL", "XL"].includes(e))) {
+//         return true
+//     } else {
+//         return false
+//     }
+// }
 
 const isNumberWithoutDecimal = function (value) {
     let regex = /^\d+$/

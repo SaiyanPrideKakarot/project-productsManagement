@@ -1,14 +1,16 @@
 const mongoose = require('mongoose')
-const producrSchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
 
     title: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
     },
     description: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     price: {
         type: Number,
@@ -16,11 +18,13 @@ const producrSchema = new mongoose.Schema({
     },
     currencyId: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     currencyFormat: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     isFreeShipping: {
         type: Boolean,
@@ -28,11 +32,16 @@ const producrSchema = new mongoose.Schema({
     },
     productImage: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
-    style: String,
+    style: {
+        type: String,
+        trim: true
+    },
     availableSizes: {
         type: [String],
+        required: true,
         enum: ["S", "XS", "M", "X", "L", "XXL", "XL"]
     },
     installments: Number,
@@ -43,4 +52,4 @@ const producrSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-module.exports = mongoose.model('Product', producrSchema)
+module.exports = mongoose.model('Product', productSchema)

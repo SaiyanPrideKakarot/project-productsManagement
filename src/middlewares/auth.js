@@ -35,10 +35,10 @@ const authorization = async function (req, res, next) {
         if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "Invalid User Id" })
         }
-        // let user = await UserModel.findById(userId)
-        // if (!user) {
-        //     return res.status(404).send({status: false, message: "User not found"})
-        // }
+        let user = await UserModel.findById(userId)
+        if (!user) {
+            return res.status(404).send({status: false, message: `User with user id ${userId} deosnot exists`})
+        }
         if (decodedToken.userId != userId) {
             return res.status(403).send({ status: false, message: "User not Authorized" })
         }
