@@ -8,10 +8,8 @@ const { uploadFile } = require('../controllers/awsController')
 const createUser = async function (req, res) {
     try {
         let data = req.body
-        let { fname, lname, email, profileImage, phone, password, address } = data
-        let { shipping } = data.address
-        let { billing } = data.address
-        let files = req.files
+        let { fname, lname, email, phone, password, address } = data
+        let profileImage = req.files
 
         if ((Object.keys(data).length == 0) && !profileImage) {
             return res.status(400).send({ status: false, message: "Please provide appropriate details" })
@@ -20,9 +18,6 @@ const createUser = async function (req, res) {
         if (!fname) {
             return res.status(400).send({ status: false, message: "First Name is required" })
         }
-        // if (!isValidString(fname)) {
-        //     return res.status(400).send({ status: false, message: "First Name can only be string" })
-        // }
         fname = fname.trim()
         if (!isValidName(fname)) {
             return res.status(400).send({ status: false, message: "Please enter a valid First Name" })
@@ -31,19 +26,13 @@ const createUser = async function (req, res) {
         if (!lname) {
             return res.status(400).send({ status: false, message: "Last Name is required" })
         }
-        if (!isValidString(lname)) {
-            return res.status(400).send({ status: false, message: "Last Name can only be string and cannot be empty" })
-        }
         lname = lname.trim()
         if (!isValidName(lname)) {
-            return res.status({ status: false, message: "Please enter a valid Last Name" })
+            return res.status(400).send({ status: false, message: "Please enter a valid Last Name" })
         }
 
         if (!email) {
             return res.status(400).send({ status: false, message: "Email address is required" })
-        }
-        if (!isValidString(email)) {
-            return res.status(400).send({ status: false, message: "Email can only be string and cannot be empty" })
         }
         email = email.trim().toLowerCase()
         if (!isValidEmail(email)) {
@@ -57,23 +46,17 @@ const createUser = async function (req, res) {
         if (!phone) {
             return res.status(400).send({ status: false, message: "Phone Number is mandatory" })
         }
-        if (!isValidString(phone)) {
-            return res.status(400).send({ status: false, message: "Phone Number must be in string and cannot be empty" })
-        }
         phone = phone.trim()
         if (!isValidPhone(phone)) {
             return res.status(400).send({ status: false, message: "Please provide a valid Indian phone number" })
         }
         let notUniquePhone = await UserModel.findOne({ phone: phone })
         if (notUniquePhone) {
-            return res.status(400).send({ status: false, message: `User with Phone: ${phone} already exists` })
+            return res.status(400).send({ status: false, message: `User with Phone No. ${phone} already exists` })
         }
 
         if (!password) {
             return res.status(400).send({ status: false, message: "Password is mandatory" })
-        }
-        if (!isValidString(password)) {
-            return res.status(400).send({ status: false, message: "Password must be in string and cannot be empty" })
         }
         if (!isValidPassword(password)) {
             return res.status(400).send({ status: false, message: "Password must be atlease 8 characters and maximum 15 characters" })
@@ -83,83 +66,86 @@ const createUser = async function (req, res) {
         })
 
         if (address) {
-            address = JSON.parse(address)
-            if (address.shipping) {
-                if (!address.shipping.street) {
-                    return res.status(400).send({ status: false, message: "Street of shipping address is mandatory" })
-                }
-                if (!isValidString(address.shipping.street)) {
-                    return res.status(400).send({ status: false, message: "Street of shipping address must be in string and cannot be empty" })
-                }
-                address.shipping.street = address.shipping.street.trim()
+            try {
+                address = JSON.parse(address)
+                if (address.shipping) {
+                    if (!address.shipping.street) {
+                        return res.status(400).send({ status: false, message: "Street of shipping address is mandatory" })
+                    }
+                    if (!isValidString(address.shipping.street)) {
+                        return res.status(400).send({ status: false, message: "Street of shipping address must be in string." })
+                    }
+                    address.shipping.street = address.shipping.street.trim()
 
-                if (!address.shipping.city) {
-                    return res.status(400).send({ status: false, message: "City of shipping address is mandatory" })
-                }
-                if (!isValidString(address.shipping.city)) {
-                    return res.status(400).send({ status: false, message: "City of shipping address must be in string and cannot be empty" })
-                }
-                address.shipping.city = address.shipping.city.trim()
+                    if (!address.shipping.city) {
+                        return res.status(400).send({ status: false, message: "City of shipping address is mandatory" })
+                    }
+                    if (!isValidString(address.shipping.city)) {
+                        return res.status(400).send({ status: false, message: "City of shipping address must be in string and cannot be empty" })
+                    }
+                    address.shipping.city = address.shipping.city.trim()
 
-                if (!address.shipping.pincode) {
-                    return res.status(400).send({ status: false, message: "Pincode of shipping address is mandatory" })
+                    if (!address.shipping.pincode) {
+                        return res.status(400).send({ status: false, message: "Pincode of shipping address is mandatory" })
+                    }
+                    if (typeof (address.shipping.pincode) != "number") {
+                        return res.status(400).send({ status: false, message: "Pincode of shipping address must be in number" })
+                    }
+                    if (!isValidPinCode(address.shipping.pincode)) {
+                        return res.status(400).send({ status: false, message: "Please enter a valid pincode for shipping address. A valid pincode is of 6 digits and doesnot starts with 0" })
+                    }
+                } else {
+                    return res.status(400).send({ status: false, message: "Shipping address is a mandatory field" })
                 }
-                if (typeof (address.shipping.pincode) != "number") {
-                    return res.status(400).send({ status: false, message: "Pincode of shipping address must be in number" })
+
+                if (address.billing) {
+                    if (!address.billing.street) {
+                        return res.status(400).send({ status: false, message: "Street of billing address is mandatory" })
+                    }
+                    if (!isValidString(address.billing.street)) {
+                        return res.status(400).send({ status: false, message: "Street of billing address must be in string and cannot be empty" })
+                    }
+                    address.billing.street = address.billing.street.trim()
+
+                    if (!address.billing.city) {
+                        return res.status(400).send({ status: false, message: "City of billing address is mandatory" })
+                    }
+                    if (!isValidString(address.billing.city)) {
+                        return res.status(400).send({ status: false, message: "City of billing address must be in string and cannot be empty" })
+                    }
+                    address.billing.city = address.billing.city.trim()
+
+                    if (!address.billing.pincode) {
+                        return res.status(400).send({ status: false, message: "Pincode of billing address is mandatory" })
+                    }
+                    if (typeof (address.billing.pincode) != "number") {
+                        return res.status(400).send({ status: false, message: "Pincode of billing address must be in number" })
+                    }
+                    if (!isValidPinCode(address.billing.pincode)) {
+                        return res.status(400).send({ status: false, message: "Please enter a valid pincode for billing address. A valid pincode is of 6 digits and doesnot starts with 0" })
+                    }
+                } else {
+                    return res.status(400).send({ status: false, message: "Billing address is a mandatory field" })
                 }
-                // address.shipping.pincode = address.shipping.pincode.trim()
-                if (!isValidPinCode(address.shipping.pincode)) {
-                    return res.status(400).send({ status: false, message: "Please enter a valid pincode for shipping address. A valid pincode is of 6 digits and doesnot starts with 0" })
-                }
-            } else {
-                return res.status(400).send({ status: false, message: "Shipping address is a mandatory field" })
+            } catch (error) {
+                console.log(error)
+                return res.status(400).send({ status: false, message: `Invalid object or unable to parse in object. Please provide valid object (Hint:First digit of Number field cannot contain 0 and string field must be inside "")` })
             }
 
-            if (address.billing) {
-                if (!address.billing.street) {
-                    return res.status(400).send({ status: false, message: "Street of billing address is mandatory" })
-                }
-                if (!isValidString(address.billing.street)) {
-                    return res.status(400).send({ status: false, message: "Street of billing address must be in string and cannot be empty" })
-                }
-                address.billing.street = address.billing.street.trim()
-
-                if (!address.billing.city) {
-                    return res.status(400).send({ status: false, message: "City of billing address is mandatory" })
-                }
-                if (!isValidString(address.billing.city)) {
-                    return res.status(400).send({ status: false, message: "City of billing address must be in string and cannot be empty" })
-                }
-                address.billing.city = address.billing.city.trim()
-
-                if (!address.billing.pincode) {
-                    return res.status(400).send({ status: false, message: "Pincode of billing address is mandatory" })
-                }
-                if (typeof (address.billing.pincode) != "number") {
-                    return res.status(400).send({ status: false, message: "Pincode of billing address must be in number" })
-                }
-                // address.billing.pincode = address.billing.pincode.trim()
-                if (!isValidPinCode(address.billing.pincode)) {
-                    return res.status(400).send({ status: false, message: "Please enter a valid pincode for billing address. A valid pincode is of 6 digits and doesnot starts with 0" })
-                }
-            } else {
-                return res.status(400).send({ status: false, message: "Billing address is a mandatory field" })
-            }
         } else {
             return res.status(400).send({ status: false, message: "Address is a mandatory field" })
         }
-
-        if (files.length === 0) {
+        if (profileImage.length === 0) {
             return res.status(400).send({ status: false, message: "Please upload profile image" })
         }
-        if (files.length > 1) {
+        if (profileImage.length > 1) {
             return res.status(400).send({ status: false, message: "You can upload only one image in Profile Image" })
         }
-        if (!isValidImage(files[0].mimetype)) {
+        if (!isValidImage(profileImage[0].mimetype)) {
             return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg image type are accepted." })
         }
 
-        let uploadedImageUrl = await uploadFile(files[0])
+        let uploadedImageUrl = await uploadFile(profileImage[0])
         profileImage = uploadedImageUrl
 
         let newData = {
@@ -185,7 +171,7 @@ const loginUser = async function (req, res) {
     try {
         let data = req.body
         if (Object.keys(data).length === 0) {
-            return res.status(400).send({ status: false, message: "Request body not empty" });
+            return res.status(400).send({ status: false, message: "Request body cannnot be empty" });
         }
         if (Object.keys(data).length > 2) {
             return res.status(400).send({ status: false, message: "Request body must have email and password only" });
@@ -194,17 +180,11 @@ const loginUser = async function (req, res) {
         if (!email) {
             return res.status(400).send({ status: false, message: "Email is mandatory" })
         }
-        if (!isValidString(email)) {
-            return res.status(400).send({ status: false, message: "Email is must be string" })
-        }
         if (!isValidEmail(email)) {
             return res.status(400).send({ status: false, message: "Please enter valid email address" })
         }
         if (!password) {
             return res.status(400).send({ status: false, message: "Password is mandatory" })
-        }
-        if (!isValidString(password)) {
-            return res.status(400).send({ status: false, message: "Password is must be string" })
         }
 
         let user = await UserModel.findOne({ email: email.trim() });
@@ -222,9 +202,10 @@ const loginUser = async function (req, res) {
             organisation: "FunctionUp",
         }
         let token = jwt.sign(payload, "Project5-group03", { expiresIn: '24h' });
-        const finalData = {};
-        finalData.userId = user._id.toString()
-        finalData.token = token
+        const finalData = {
+            userId: user._id.toString(),
+            token: token
+        };
         res.setHeader("Authorization", token)
         return res.status(201).send({ status: true, message: "User login successfully", data: finalData });
 
@@ -234,7 +215,7 @@ const loginUser = async function (req, res) {
 }
 
 
-const getUserProfile = async (req, res) => {
+const getUserProfile = async function (req, res) {
     try {
         let userId = req.params.userId;
 
@@ -265,37 +246,26 @@ const updateAPI = async function (req, res) {
 
         let userId = req.params.userId
         let data = req.body
-        let { fname, lname, email, phone, password, address } = data
-        let profileImage = req.files
-        let { shipping, billing } = data.address
+        let { fname, lname, email, phone, password, profileImage, address } = data
+        let file = req.files
+        // let { shipping, billing } = data.address
 
         let obj = {};
-        // applying filters
-        //Returns all blogs in the collection that aren't deleted and are published
         if (fname) {
-            if (!isValidString(fname)) {
-                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
-            }
             fname = fname.trim()
             if (!isValidName(fname)) {
-                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
+                return res.status(400).send({ status: false, message: "Please enter a valid firstname" })
             }
             obj.fname = fname;
         }
         if (lname) {
-            if (!isValidString(lname)) {
-                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
-            }
             lname = lname.trim()
             if (!isValidName(lname)) {
-                return res.status({ status: false, message: "lname Name can only be string and cannot be empty" })
+                return res.status(400).send({ status: false, message: "Please enter a valid lastname" })
             }
             obj.lname = lname;
         }
         if (email) {
-            if (!isValidString(email)) {
-                return res.status(400).send({ status: false, message: "First Name can only be string and cannot be empty" })
-            }
             email = email.trim().toLowerCase()
             if (!isValidEmail(email)) {
                 return res.status(400).send({ status: false, message: "Please enter a valid email" })
@@ -307,9 +277,6 @@ const updateAPI = async function (req, res) {
             obj.email = email;
         }
         if (phone) {
-            if (!isValidString(phone)) {
-                return res.status(400).send({ status: false, message: "Phone Number must be in string and cannot be empty" })
-            }
             phone = phone.trim()
             if (!isValidPhone(phone)) {
                 return res.status(400).send({ status: false, message: "Please provide a valid phone number" })
@@ -321,29 +288,26 @@ const updateAPI = async function (req, res) {
             obj.phone = phone;
         }
         if (password) {
-            if (!isValidString(password)) {
-                return res.status(400).send({ status: false, message: "Password must be in string and cannot be empty" })
-            }
             if (!isValidPassword(password)) {
                 return res.status(400).send({ status: false, message: "Password must be atlease 8 characters and maximum 15 characters" })
             }
-            let encrypt = bcrypt.hash(password, 10, function (err, hash) {
-                password = hash
-            })
-            obj.password = password;
+            let encrypt = await bcrypt.hash(password, 10)
+            password = encrypt
+            obj.password = password
         }
         if (profileImage) {
-            // if (files.length > 1) {
-            //     return res.status(400).send({ status: false, message: "You can upload only one image in Profile Image" })
-            // }
-            // if (!isValidImage(files[0].originalname)) {
-            //     return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg, gif, jfif image type are accepted." })
-            // }
-            let uploadedImageUrl = await uploadFile(profileImage[0])
+            if (file.length > 1) {
+                return res.status(400).send({ status: false, message: "You can upload only one image in Profile Image" })
+            }
+            if (!isValidImage(file[0].mimetype)) {
+                return res.status(400).send({ status: false, message: "Invalid image type. Only jpg, png, jpeg, gif, jfif image type are accepted." })
+            }
+            let uploadedImageUrl = await uploadFile(file[0])
             obj.profileImage = uploadedImageUrl;
         }
         if (address) {
-            address = JSON.parse(address)
+            try {
+                address = JSON.parse(address)
             if (address.shipping) {
                 if (!address.shipping.street) {
                     return res.status(400).send({ status: false, message: "Street of shipping address is mandatory" })
@@ -407,9 +371,13 @@ const updateAPI = async function (req, res) {
             } else {
                 return res.status(400).send({ status: false, message: "Billing address is a mandatory field" })
             }
+            } catch (error) {
+                console.log(error)
+                return res.status(400).send({ status: false, message: `Invalid object or unable to parse in object. Please provide valid object (Hint:First digit of Number field cannot contain 0 and string field must be inside "")` })
+            }
             obj.address = address
         }
-        let savedData = await UserModel.findOneAndUpdate({ _id: userId }, obj, { new: true });
+        let savedData = await UserModel.findOneAndUpdate({ _id: userId }, {$set: obj}, { new: true });
         if (!savedData) {
             return res.status(404).send({ status: false, msg: "User not found" });
         }
