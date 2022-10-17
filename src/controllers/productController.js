@@ -1,7 +1,6 @@
 const ProductModel = require('../models/productModel')
 const { isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal, isValidImage } = require('../validations/validators')
 const { uploadProductImages } = require('../controllers/awsController')
-const productModel = require("../models/productModel")
 
 
 const createProduct = async function (req, res) {
@@ -129,11 +128,11 @@ const getProductByQuery = async function (req, res) {
         let filter = { isDeleted: false }
 
         if (Object.keys(data).length == 0) {
-            let allProducts = await ProductModel.find(filter).sort({price: 1})
+            let allProducts = await ProductModel.find(filter).sort({ price: 1 })
             if (allProducts.length == 0) {
-                return res.status(404).send({status: false, message: "No products found or every product is deleted."})
+                return res.status(404).send({ status: false, message: "No products found or every product is deleted." })
             }
-            return res.status(200).send({status: false, message: "All Products", data: allProducts})
+            return res.status(200).send({ status: false, message: "All Products", data: allProducts })
         }
 
         let { size, name, priceGreaterThan, priceLessThan, priceSort } = data
@@ -149,17 +148,17 @@ const getProductByQuery = async function (req, res) {
                             return res.status(400).send({ status: false, message: `'${ele}' is not a valid size, please enter/select sizes among these [S, XS, M, X, L, XXL, XL]` })
                         }
                     }
-                    filter["availableSizes"] = {$in: uniqueSizes};
+                    filter["availableSizes"] = { $in: uniqueSizes };
                 } else {
                     return res.status(400).send({ status: false, message: "Size would be array type" })
                 }
             }
-    
-    
+
+
             if (name) {
                 filter["title"] = { "$regex": name };
             }
-    
+
             if (priceGreaterThan && priceLessThan) {
                 priceGreaterThan = +priceGreaterThan
                 priceLessThan = +priceLessThan
@@ -178,7 +177,7 @@ const getProductByQuery = async function (req, res) {
                     }
                     filter["price"] = { $gte: priceGreaterThan }
                 }
-    
+
                 if (priceLessThan) {
                     priceLessThan = +priceLessThan
                     if (!isValidNumber(priceLessThan)) {
@@ -187,9 +186,9 @@ const getProductByQuery = async function (req, res) {
                     filter["price"] = { $lte: priceLessThan }
                 }
             }
-    
-            const foundProducts = await productModel.find(filter).select({ __v: 0 })
-    
+
+            const foundProducts = await ProductModel.find(filter).select({ __v: 0 })
+
             if (!priceSort) {
                 priceSort = 1
             }
@@ -204,17 +203,17 @@ const getProductByQuery = async function (req, res) {
             } else {
                 return res.status(400).send({ status: false, message: "PriceSort should be 1 or -1" })
             }
-    
+
             if (foundProducts.length == 0) {
                 return res.status(404).send({ status: false, message: "Products not found for the given query" })
             }
-    
+
             return res.status(200).send({ status: "true", message: 'Success', data: foundProducts })
-    
+
         } else {
-            return res.status(400).send({status: false, message: "Invalid filters or query"})
+            return res.status(400).send({ status: false, message: "Invalid filters or query" })
         }
-        
+
     } catch (err) {
         console.log(err)
         return res.status(500).send({ status: false, message: err.message })
@@ -231,7 +230,7 @@ const getProductById = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please provide valid productId" });
         }
 
-        let productDetails = await productModel.findOne({ _id: productId, isDeleted: false });
+        let productDetails = await ProductModel.findOne({ _id: productId, isDeleted: false });
         if (!productDetails) {
             return res.status(404).send({ status: false, message: "No such product exists" });
         }
@@ -296,13 +295,17 @@ const updateProduct = async function (req, res) {
         }
 
         if (availableSizes) {
-            if (!isValidSizes) {
-                return res.status(400).send({ status: false, message: "Please provide a valid size" })
+            sizes = availableSizes.trim().toUpperCase()
+            sizes = availableSizes.split(" ").map(String)
+            if (!isValidSizes(sizes)) {
+                return res.status(400).send({ status: false, message: "Please provide valid size" })
             }
-            // let check = await ProductModel.findById(productId)
-            // if ((check.availableSizes).includes(availableSizes)) {
-
-            // }
+            let check = await ProductModel.findById(productId)
+            if ((check.availableSizes).every((e) => sizes.includes(e))) {
+                sizes.splice(indexOf(e), 1)
+            } else {
+                sizes.push(e)
+            }
             editor.availableSizes = availableSizes
         }
 
@@ -353,7 +356,7 @@ const deleteProduct = async function (req, res) {
         if (!isValidObjectId(productId)) {
             return res.status(400).send({ status: false, message: "Inavlid productId." });
         }
-        let findProduct = await productModel.findOne({ _id: productId, isDeleted: false });
+        let findProduct = await ProductModel.findOne({ _id: productId, isDeleted: false });
         if (!findProduct) {
             return res.status(404).send({ status: false, message: `No product found by ${productId}` });
         }
@@ -361,7 +364,7 @@ const deleteProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: `Product has been already deleted.` });
         }
 
-        let deletedProduct = await productModel.findOneAndUpdate({ _id: productId },
+        let deletedProduct = await ProductModel.findOneAndUpdate({ _id: productId },
             { $set: { isDeleted: true, deletedAt: new Date() } },
             { new: true }).select({ title: 1, isDeleted: 1, deletedAt: 1 });
 
