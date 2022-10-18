@@ -9,8 +9,6 @@ const addOrCreateCart = async function (req, res) {
         let data = req.body
         let { productId, cartId } = data
 
-        let cart = { userId: userId }
-
         if (productId && cartId) {
             if (!isValidObjectId(productId)) {
                 return res.status(400).send({ status: false, message: "Invalid Product Id" })
@@ -48,7 +46,6 @@ const addOrCreateCart = async function (req, res) {
                 }
             }
             let a = arr.map((e) => e.productId.toString())
-            console.log(a)
             if (a.indexOf(productId) == -1) {
                 let product = {
                     productId: productId,
@@ -89,6 +86,7 @@ const addOrCreateCart = async function (req, res) {
                 if (!productExists) {
                     return res.status(404).send({ status: false, message: "Product doesnot exists" })
                 }
+                let cart = { userId: userId }
 
                 let items = []
                 let product = {
