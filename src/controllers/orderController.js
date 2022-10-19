@@ -1,5 +1,6 @@
 const OrderModel = require('../models/orderModel')
 const CartModel = require('../models/cartModel')
+const ProductModel = require('../models/productModel')
 const { isValidBoolean, isValidStatus, isValidString, isValidObjectId } = require('../validations/validators')
 
 
@@ -26,7 +27,7 @@ const createOrder = async function (req, res) {
                 return res.status(400).send({ status: false, message: "Invalid cart id" })
             }
 
-            let cartDetails = await CartModel.findOne({ _id: cartId })
+            let cartDetails = await CartModel.findById(cartId)
             if (!cartDetails) {
                 return res.status(404).send({ status: false, message: `Cart with cart id ${cartId} doesnot exists` })
             }
@@ -57,7 +58,13 @@ const createOrder = async function (req, res) {
             let newOrder = await OrderModel.create(order)
             let result = await OrderModel.findById(newOrder._id).populate({ path: 'items.productId', model: ProductModel, select: ["title", "price", "productImage"] })
 
-            return res.status(201).send({status: true, message: "Success", data: result})
+            let emptyCart = await CartModel.findOneAndUpdate(
+                { _id: cartId },
+                { $set: { items: [], totalPrice: 0, totalItems: 0 } },
+                { new: true }
+            )
+
+            return res.status(201).send({ status: true, message: "Success", data: result })
         } else {
             return res.status(400).send({ status: false, message: "Invalid request body" })
         }
@@ -83,29 +90,35 @@ const updateOrder = async function (req, res) {
         if (Object.keys(data).length == 0) {
             return res.status(400).send({ status: false, message: "Request body is empty" })
         }
-        if (cancellable || status) {
-            if (cancellable) {
-                if (!isValidBoolean(cancellable)) {
-                    return res.status(400).send({ status: false, message: "Cancellable should only boolean type i.e. true or false" })
-                }
+        if (cancellable) {
+            if (!isValidBoolean(cancellable)) {
+                return res.status(400).send({ status: false, message: "Cancellable should only boolean type i.e. true or false" })
             }
-            if (status) {
-                status = status.trim().toLowerCase()
-                if (!isValidStatus(status)) {
-                    return res.status(400).send({ status: false, message: `Status should only be among these: "pending", "completed", "cancelled"` })
-                }
-            }
-
-            let updatedOrder = await OrderModel.findOneAndUpdate(
-                { userId: userId },
-                { $set: data },
-                { new: true }
-            ).populate({ path: 'items.productId', model: ProductModel, select: ["title", "price", "productImage"] })
-
-            return res.status(200).send({ status: true, message: "Success", data: updatedOrder })
-        } else {
-            return res.status(400).send({ status: false, message: "Invalid request body" })
         }
+        if (status) {
+            if (!isValidString(status)) {
+                return res.status(400).send({status: false, message: "Status must be in string"})
+            }
+            status = status.trim().toLowerCase()
+            let arr = ["pending", "completed", "cancelled"]
+            if (arr.indexOf(status) == -1) {
+                return res.status(400).send({ status: false, message: 'Status should only be among these: [pending, completed, cancelled]' })
+            }
+            let order = await OrderModel.findOne({ userId: userId })
+            if (status == "cancelled") {
+                if (order.cancellable == false) {
+                    return res.status(400).send({ status: false, message: "This order is not cancellable" })
+                }
+            }
+        }
+
+        let updatedOrder = await OrderModel.findOneAndUpdate(
+            { userId: userId },
+            { $set: data },
+            { new: true }
+        ).populate({ path: 'items.productId', model: ProductModel, select: ["title", "price", "productImage"] })
+
+        return res.status(200).send({ status: true, message: "Success", data: updatedOrder })
     } catch (error) {
         console.log(error)
         return res.status(500).send({ status: false, error: error.message })

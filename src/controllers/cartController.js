@@ -234,7 +234,7 @@ const deleteCart = async function (req, res) {
             return res.status(403).send({ status: false, message: "You are not allowed to empty other user's cart" })
         }
 
-        let update = await CartModel.findOneAndUpdate({ userId: userId }, { items: [], totalItems: 0, totalPrice: 0 }, { new: true })
+        let update = await CartModel.findOneAndUpdate({ userId: userId }, {$set: { items: [], totalItems: 0, totalPrice: 0 }}, { new: true })
 
         return res.status(204).send({ status: true, message: "Success", data: update })
 
