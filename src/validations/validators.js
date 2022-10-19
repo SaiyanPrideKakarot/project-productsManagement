@@ -91,5 +91,13 @@ const isValidRemoveProduct = function (value) {
     }
 }
 
+const isValidStatus = function (value) {
+    if (value.every((e) => ["pending", "completed", "cancelled"].includes(e))) {
+        return true
+    } else {
+        return false
+    }
+}
 
-module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal, isValidRemoveProduct }
+
+module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal, isValidRemoveProduct, isValidStatus }
