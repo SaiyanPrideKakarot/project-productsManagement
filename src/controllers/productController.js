@@ -302,7 +302,7 @@ const updateProduct = async function (req, res) {
             }
             let check = await ProductModel.findById(productId)
             if ((check.availableSizes).every((e) => sizes.includes(e))) {
-                sizes.splice(indexOf(e), 1)
+                sizes.splice(sizes.indexOf(e), 1)
             } else {
                 sizes.push(e)
             }

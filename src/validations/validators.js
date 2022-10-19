@@ -83,5 +83,13 @@ const isNumberWithoutDecimal = function (value) {
     return regex.test(value)
 }
 
+const isValidRemoveProduct = function (value) {
+    if ((value == 0) || (value == 1)) {
+        return true
+    } else {
+        return false
+    }
+}
 
-module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal }
+
+module.exports = { isValidString, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPinCode, isValidImage, isValidObjectId, isValidNumber, isValidBoolean, isValidSizes, isNumberWithoutDecimal, isValidRemoveProduct }
