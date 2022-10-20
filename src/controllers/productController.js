@@ -13,6 +13,10 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please provide appropriate details" })
         }
 
+        if (!title || !description || !price || !currencyId || !currencyFormat || !availableSizes) {
+            return res.status(400).send({ status: false, message: "Invalid request body" })
+        }
+
         let newData = {}
 
         if (!title) {
@@ -249,6 +253,11 @@ const updateProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Invalid Product Id in path params" })
         }
 
+        let available = await ProductModel.findOne({_id: productId, isDeleted: false})
+        if (!available) {
+            return res.status(404).send({status: false, message: "Product not found"})
+        }
+
         let data = req.body
         let { title, description, price, currencyId, currencyFormat, isFreeShipping, productImage, style, availableSizes, installments } = data
         let file = req.files
@@ -281,9 +290,9 @@ const updateProduct = async function (req, res) {
         if (isFreeShipping) {
             isFreeShipping = isFreeShipping.trim()
             if (isFreeShipping == 'true') {
-                newData.isFreeShipping = true
+                editor.isFreeShipping = true
             } else if (isFreeShipping == 'false') {
-                newData.isFreeShipping = false
+                editor.isFreeShipping = false
             } else {
                 return res.status(400).send({ status: false, message: "isFreeShipping's value can only be true or false" })
             }
@@ -295,18 +304,21 @@ const updateProduct = async function (req, res) {
         }
 
         if (availableSizes) {
-            sizes = availableSizes.trim().toUpperCase()
-            sizes = availableSizes.split(" ").map(String)
-            if (!isValidSizes(sizes)) {
-                return res.status(400).send({ status: false, message: "Please provide valid size" })
+            let sizes = availableSizes.split(" ").map((s) => s.trim().toUpperCase());
+            if (!sizes.every((e) => ["S", "XS", "M", "X", "L", "XXL", "XL"].includes(e))) {
+                return res.status(400).send({ status: false, message: "Invalid Available Sizes" })
             }
+
             let check = await ProductModel.findById(productId)
-            if ((check.availableSizes).every((e) => sizes.includes(e))) {
-                sizes.splice(sizes.indexOf(e), 1)
-            } else {
-                sizes.push(e)
+            let arr = check.availableSizes
+            for (let i = 0 ; i < arr.length ; i++) {
+                for (let j = 0 ; j < sizes.length ; j++) {
+                    if (sizes[j] == arr[i]) {
+                        sizes.splice(j, 1)
+                    }
+                }
             }
-            editor.availableSizes = availableSizes
+            editor.availableSizes = sizes
         }
 
         if (installments) {
@@ -340,7 +352,7 @@ const updateProduct = async function (req, res) {
         if (!updateData) {
             return res.status(404).send({ status: false, message: "Product not found" })
         }
-        return res.status(200).send({ status: true, message: "Success", data: updateData })
+        return res.status(200).send({ status: true, message: "Successful", data: updateData })
     } catch (error) {
         console.log(error)
         return res.status(500).send({ status: false, error: error.message })

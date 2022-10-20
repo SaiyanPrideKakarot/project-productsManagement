@@ -181,11 +181,17 @@ const loginUser = async function (req, res) {
             if (!email) {
                 return res.status(400).send({ status: false, message: "Email is mandatory" })
             }
+            if (!isValidString(email)) {
+                return res.status(400).send({status: false, message: "Email must be in string"})
+            }
             if (!isValidEmail(email)) {
                 return res.status(400).send({ status: false, message: "Please enter valid email address" })
             }
             if (!password) {
                 return res.status(400).send({ status: false, message: "Password is mandatory" })
+            }
+            if (!isValidString(password)) {
+                return res.status(400).send({status: false, message: "Password must be in string"})
             }
 
             let user = await UserModel.findOne({ email: email.trim() });
