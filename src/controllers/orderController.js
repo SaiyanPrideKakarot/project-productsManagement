@@ -1,7 +1,7 @@
 const OrderModel = require('../models/orderModel')
 const CartModel = require('../models/cartModel')
 const ProductModel = require('../models/productModel')
-const { isValidBoolean, isValidStatus, isValidString, isValidObjectId } = require('../validations/validators')
+const { isValidBoolean, isValidString, isValidObjectId } = require('../validations/validators')
 
 
 const createOrder = async function (req, res) {
@@ -33,6 +33,10 @@ const createOrder = async function (req, res) {
             }
             if (cartDetails.userId.toString() != userId) {
                 return res.status(403).send({ status: false, message: "You are not allowed to order using other user's cart" })
+            }
+
+            if (cartDetails.totalItems == 0) {
+                return res.status(400).send({ status: false, message: "For placing order, your cart should not be empty." })
             }
 
             let order = {
@@ -80,16 +84,31 @@ const updateOrder = async function (req, res) {
         let userId = req.params.userId
 
         let cartDetails = await CartModel.findOne({ userId: userId })
+        if (!cartDetails) {
+            return res.status(404).send({ status: false, message: "Cart doesnot exists" })
+        }
         if (cartDetails.userId.toString() != userId) {
             return res.status(403).send({ status: false, message: "You are not allowed to order using other user's cart" })
         }
 
         let data = req.body
-        let { cancellable, status } = data
+        let { orderId, cancellable, status } = data
 
         if (Object.keys(data).length == 0) {
             return res.status(400).send({ status: false, message: "Request body is empty" })
         }
+
+        if (!orderId) {
+            return res.status(400).send({ status: false, message: "Please provide order Id" })
+        }
+        if (!isValidObjectId(orderId)) {
+            return res.status(400).send({ status: false, message: "Invalid Order Id" })
+        }
+        let order = await OrderModel.findById(orderId)
+        if (!order) {
+            return res.status(404).send({ status: false, message: `Order with orderId ${orderId} not found` })
+        }
+
         if (cancellable) {
             if (!isValidBoolean(cancellable)) {
                 return res.status(400).send({ status: false, message: "Cancellable should only boolean type i.e. true or false" })
@@ -97,23 +116,22 @@ const updateOrder = async function (req, res) {
         }
         if (status) {
             if (!isValidString(status)) {
-                return res.status(400).send({status: false, message: "Status must be in string"})
+                return res.status(400).send({ status: false, message: "Status must be in string" })
             }
             status = status.trim().toLowerCase()
             let arr = ["pending", "completed", "cancelled"]
             if (arr.indexOf(status) == -1) {
                 return res.status(400).send({ status: false, message: 'Status should only be among these: [pending, completed, cancelled]' })
             }
-            let order = await OrderModel.findOne({ userId: userId })
             if (status == "cancelled") {
                 if (order.cancellable == false) {
-                    return res.status(400).send({ status: false, message: "This order is not cancellable" })
+                    return res.status(400).send({ status: false, message: "This order cannot be cancelled" })
                 }
             }
         }
 
         let updatedOrder = await OrderModel.findOneAndUpdate(
-            { userId: userId },
+            { _id: orderId },
             { $set: data },
             { new: true }
         ).populate({ path: 'items.productId', model: ProductModel, select: ["title", "price", "productImage"] })

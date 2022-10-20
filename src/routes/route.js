@@ -23,14 +23,14 @@ router.get('/products/:productId', ProductController.getProductById)
 router.put('/products/:productId', ProductController.updateProduct)
 router.delete('/products/:productId', ProductController.deleteProduct)
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< USERS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CART APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
 router.post('/users/:userId/cart', authentication, authorization, CartController.addOrCreateCart)
 router.put('/users/:userId/cart', authentication, authorization, CartController.updateCart)
 router.get('/users/:userId/cart', authentication, authorization, CartController.getCart)
 router.delete('/users/:userId/cart', authentication, authorization, CartController.deleteCart)
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< USERS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORDER APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
 router.post('/users/:userId/orders', authentication, authorization, OrderController.createOrder)
 router.put('/users/:userId/orders', authentication, authorization, OrderController.updateOrder)

@@ -13,7 +13,7 @@ const createProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please provide appropriate details" })
         }
 
-        if (!title || !description || !price || !currencyId || !currencyFormat || !availableSizes) {
+        if (!title || !description || !price || !availableSizes) {
             return res.status(400).send({ status: false, message: "Invalid request body" })
         }
 
@@ -253,14 +253,23 @@ const updateProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Invalid Product Id in path params" })
         }
 
-        let available = await ProductModel.findOne({_id: productId, isDeleted: false})
+        let available = await ProductModel.findOne({ _id: productId, isDeleted: false })
         if (!available) {
-            return res.status(404).send({status: false, message: "Product not found"})
+            return res.status(404).send({ status: false, message: "Product doesnot exists." })
         }
 
         let data = req.body
         let { title, description, price, currencyId, currencyFormat, isFreeShipping, productImage, style, availableSizes, installments } = data
         let file = req.files
+
+        if ((Object.keys(data).length == 0) && !file) {
+            return res.status(400).send({ status: false, message: "Please provide appropriate details" })
+        }
+
+        if (!title || !description || !price || !availableSizes || !isFreeShipping || !productImage || !style || !installments) {
+            return res.status(400).send({ status: false, message: "Invalid request body" })
+        }
+
         let editor = {}
 
         if (title) {
@@ -311,8 +320,8 @@ const updateProduct = async function (req, res) {
 
             let check = await ProductModel.findById(productId)
             let arr = check.availableSizes
-            for (let i = 0 ; i < arr.length ; i++) {
-                for (let j = 0 ; j < sizes.length ; j++) {
+            for (let i = 0; i < arr.length; i++) {
+                for (let j = 0; j < sizes.length; j++) {
                     if (sizes[j] == arr[i]) {
                         sizes.splice(j, 1)
                     }

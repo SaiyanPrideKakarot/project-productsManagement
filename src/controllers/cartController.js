@@ -161,10 +161,10 @@ const updateCart = async function (req, res) {
             }
             // validatiion for removeProduct
             if (!isValidNumber(removeProduct)) {
-                return res.status(400).send({ status: false, message: "removeProduct is required" })
+                return res.status(400).send({ status: false, message: "removeProduct should be number" })
             }
             if (!isValidRemoveProduct(removeProduct)) {
-                return res.status(400).send({ status: false, message: "Enter valid removeproduct it can be only be '0' & '1'" })
+                return res.status(400).send({ status: false, message: "Enter valid removeProduct it can be only be '0' & '1'" })
             }
             let cart = searchCart.items;
             for (let i = 0; i < cart.length; i++) {
@@ -190,7 +190,7 @@ const updateCart = async function (req, res) {
                     }
                 }
             }
-            return res.status(400).send({ status: false, message: `You don't have any product of productId: ${productId}.` })
+            return res.status(404).send({ status: false, message: `You don't have any product of productId: ${productId}.` })
         }
     } catch (error) {
         console.log(error)
@@ -234,7 +234,7 @@ const deleteCart = async function (req, res) {
             return res.status(403).send({ status: false, message: "You are not allowed to empty other user's cart" })
         }
 
-        let update = await CartModel.findOneAndUpdate({ userId: userId }, {$set: { items: [], totalItems: 0, totalPrice: 0 }}, { new: true })
+        let update = await CartModel.findOneAndUpdate({ userId: userId }, { $set: { items: [], totalItems: 0, totalPrice: 0 } }, { new: true })
 
         return res.status(204).send({ status: true, message: "Success", data: update })
 

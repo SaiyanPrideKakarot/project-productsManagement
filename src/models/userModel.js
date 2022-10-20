@@ -33,43 +33,44 @@ const UserSchema = new mongoose.Schema({
         required: true,
         trim: true,
         minLen: 8,
-        maxLen: 15},
+        maxLen: 15
+    },
     address: {
-      shipping: {
-        street: {
-            type: String,
-            required: true,
-            trim: true
+        shipping: {
+            street: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            city: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            pincode: {
+                type: Number,
+                required: true,
+                trim: true
+            },
         },
-        city: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        pincode: {
-            type: Number,
-            required: true,
-            trim: true
-        },
-      },
-      billing: {
-        street: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        city: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        pincode: {
-            type: Number,
-            required: true,
-            trim: true
-        },
-      }
+        billing: {
+            street: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            city: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            pincode: {
+                type: Number,
+                required: true,
+                trim: true
+            },
+        }
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 module.exports = mongoose.model('User', UserSchema)
