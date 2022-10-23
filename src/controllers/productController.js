@@ -22,11 +22,12 @@ const createProduct = async function (req, res) {
         if (!title) {
             return res.status(400).send({ status: false, message: "Title is required" })
         }
+        title = title.trim().toLowerCase()
         let uniquetitle = await ProductModel.findOne({ title: title })
         if (uniquetitle) {
             return res.status(409).send({ status: false, message: ` Title: ${title} already exists` })
         }
-        newData.title = title.trim().toLowerCase()
+        newData.title = title
 
         if (!description) {
             return res.status(400).send({ status: false, message: "Description is required" })
@@ -160,7 +161,7 @@ const getProductByQuery = async function (req, res) {
 
 
             if (name) {
-                filter["title"] = { "$regex": name };
+                filter["title"] = { $regex: name };
             }
 
             if (priceGreaterThan && priceLessThan) {
@@ -273,7 +274,12 @@ const updateProduct = async function (req, res) {
         let editor = {}
 
         if (title) {
-            editor.title = title.trim().toLowerCase()
+            title = title.trim().toLowerCase()
+            let uniquetitle = await ProductModel.findOne({ title: title })
+            if (uniquetitle) {
+                return res.status(409).send({ status: false, message: ` Title: ${title} already exists` })
+            }
+            editor.title = title
         }
 
         if (description) {

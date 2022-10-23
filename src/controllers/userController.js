@@ -396,6 +396,8 @@ const updateAPI = async function (req, res) {
                 return res.status(404).send({ status: false, msg: "User not found" });
             }
             return res.status(200).send({ status: true, message: "Success", data: savedData });
+        } else {
+            return res.status(400).send({status: false, message: "Invalid Request body"})
         }
 
     } catch (err) {
