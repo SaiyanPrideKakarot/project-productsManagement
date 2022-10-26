@@ -144,7 +144,7 @@ const getProductByQuery = async function (req, res) {
 
         if (size || name || priceGreaterThan || priceLessThan || priceSort) {
             if (size) {
-                size = size.split(",").map(ele => ele.trim().toUpperCase())
+                size = size.split(" ").map(ele => ele.trim().toUpperCase())
                 if (Array.isArray(size)) {
                     let enumArr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
                     let uniqueSizes = [...new Set(size)]
@@ -267,7 +267,7 @@ const updateProduct = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please provide appropriate details" })
         }
 
-        if (!title || !description || !price || !availableSizes || !isFreeShipping || !productImage || !style || !installments) {
+        if (!title && !description && !price && !availableSizes && !isFreeShipping && !productImage && !style && !installments) {
             return res.status(400).send({ status: false, message: "Invalid request body" })
         }
 
